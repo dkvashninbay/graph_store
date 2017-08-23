@@ -7,19 +7,19 @@ from ....lib.graph import AcyclicDiGraph, DiGraph
 class ABCGraphModel(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    async def insert(self, vertices):
+    async def insert(self, vertexes):
         pass
 
     @abc.abstractmethod
-    async def edges(self):
+    async def vertexes(self):
         pass
 
     @abc.abstractmethod
-    async def has_edge(self, edge):
+    async def has_vertex(self, vertex):
         pass
 
     @abc.abstractmethod
-    async def trees(self, edge):
+    async def trees(self, vertex):
         pass
 
 
@@ -29,37 +29,37 @@ class InMemoryGraphModel(ABCGraphModel):
         self.graph = graph or AcyclicDiGraph()
         self.inv_graph = self.graph.reverse()
 
-    async def edges(self):
-        return self.graph.edges()
+    async def vertexes(self):
+        return self.graph.vertexes()
 
-    async def has_edge(self, edge):
-        return self.graph.has_edge(edge)
+    async def has_vertex(self, edge):
+        return self.graph.has_vertex(edge)
 
-    async def insert(self, vertices):
-        if len(vertices) == 1:
-            vertice = vertices.pop()
+    async def insert(self, edges):
+        if len(edges) == 1:
+            edge = edges.pop()
 
-            if vertice.get('parent', None) is None:
-                edge_from, edge_to = vertice['node_id'], None
+            if edge.get('parent', None) is None:
+                v_from, v_to = edge['node_id'], None
             else:
-                edge_from, edge_to = vertice['parent'], vertice['node_id']
+                v_from, v_to = edge['parent'], edge['node_id']
 
-            self.graph.insert(edge_from, edge_to)
-            self.inv_graph.insert(edge_to, edge_from)
+            self.graph.insert(v_from, v_to)
+            self.inv_graph.insert(v_to, v_from)
         else:
             tmp = AcyclicDiGraph(DiGraph())
 
-            for vertice in vertices:
-                if vertice.get('parent', None) is None:
-                    edge_from, edge_to = vertice['node_id'], None
+            for edge in edges:
+                if edge.get('parent', None) is None:
+                    v_from, v_to = edge['node_id'], None
                 else:
-                    edge_from, edge_to = vertice['parent'], vertice['node_id']
-                tmp.insert(edge_from, edge_to)
+                    v_from, v_to = edge['parent'], edge['node_id']
+                tmp.insert(v_from, v_to)
 
             self.graph.union(tmp)
             self.inv_graph.union(tmp.reverse())
 
-    async def trees(self, edge) -> Iterator[list]:
+    async def trees(self, vertex) -> Iterator[list]:
 
         def collect_subtrees(
             graph: AcyclicDiGraph,
@@ -70,19 +70,19 @@ class InMemoryGraphModel(ABCGraphModel):
 
             stack.append(start_node)
 
-            edges_out = graph.vertices(start_node)
-            if len(edges_out) == 0:
+            vs_out = graph.vertexes_to(start_node)
+            if len(vs_out) == 0:
                 yield stack.copy()
                 stack.pop()
                 return
 
-            for edge_out in edges_out:
-                yield from collect_subtrees(graph, edge_out, stack)
+            for v_out in vs_out:
+                yield from collect_subtrees(graph, v_out, stack)
 
             stack.pop()
 
-        child_subtrees = list(collect_subtrees(self.graph, edge))
-        parent_subtrees = list(collect_subtrees(self.inv_graph, edge))
+        child_subtrees = list(collect_subtrees(self.graph, vertex))
+        parent_subtrees = list(collect_subtrees(self.inv_graph, vertex))
 
         result = []
         for parent_subtree in parent_subtrees:

@@ -26,13 +26,13 @@ class NodesHandler:
 
         return web.HTTPOk()
 
-    async def get_edges(self, request):
-        return web.json_response(data=list(await self.graph.edges()))
+    async def get_vertexes(self, request):
+        return web.json_response(data=list(await self.graph.vertexes()))
 
     async def get_node_trees(self, request):
         edge = request.match_info['node_id']
 
-        if not await self.graph.has_edge(edge):
+        if not await self.graph.has_vertex(edge):
             self.log.warning('{edge} not found'.format(edge=edge))
             return web.HTTPNotFound()
 

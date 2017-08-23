@@ -59,19 +59,19 @@ class TestDiGraph(unittest.TestCase):
         for f, t in vertices:
             graph.insert(f, t)
 
-        self.assertEquals(edges, graph.edges())
+        self.assertEquals(edges, graph.vertexes())
 
         for edge, has_edge in has_edges:
-            self.assertEquals(has_edge, graph.has_edge(edge))
+            self.assertEquals(has_edge, graph.has_vertex(edge))
 
         for vertice, has_vertice in has_vertices:
-            self.assertEquals(has_vertice, graph.has_vertice(*vertice))
+            self.assertEquals(has_vertice, graph.has_edge(*vertice))
 
         inv_graph = graph.reverse()
-        for edge in inv_graph.edges():
+        for edge in inv_graph.vertexes():
             self.assertEqual(
                 inverse_graph[edge],
-                inv_graph.vertices(edge),
+                inv_graph.vertexes_to(edge),
             )
 
     @data_provider(init_data_provider)
@@ -92,19 +92,19 @@ class TestDiGraph(unittest.TestCase):
         for f, t in vertices:
             graph.insert(f, t)
 
-        self.assertEquals(edges, graph.edges())
+        self.assertEquals(edges, graph.vertexes())
 
         for edge, has_edge in has_edges:
-            self.assertEquals(has_edge, graph.has_edge(edge))
+            self.assertEquals(has_edge, graph.has_vertex(edge))
 
         for vertice, has_vertice in has_vertices:
-            self.assertEquals(has_vertice, graph.has_vertice(*vertice))
+            self.assertEquals(has_vertice, graph.has_edge(*vertice))
 
         inv_graph = graph.reverse()
-        for edge in inv_graph.edges():
+        for edge in inv_graph.vertexes():
             self.assertEqual(
                 inverse_graph[edge],
-                inv_graph.vertices(edge),
+                inv_graph.vertexes_to(edge),
             )
 
     def union_data_provider(self):
@@ -140,9 +140,9 @@ class TestDiGraph(unittest.TestCase):
     def test_union(self, a: DiGraph, b: DiGraph, vertices, exception):
         a.union(b)
 
-        self.assertEquals(set(vertices.keys()), a.edges())
+        self.assertEquals(set(vertices.keys()), a.vertexes())
         for edge, vertices in vertices.items():
-            self.assertEquals(a.vertices(edge), vertices)
+            self.assertEquals(a.vertexes_to(edge), vertices)
 
     @data_provider(union_data_provider)
     def test_union_acycle(self, a: DiGraph, b: DiGraph, vertices, exception):
@@ -155,6 +155,6 @@ class TestDiGraph(unittest.TestCase):
         else:
             a.union(b)
 
-            self.assertEquals(set(vertices.keys()), a.edges())
+            self.assertEquals(set(vertices.keys()), a.vertexes())
             for edge, vertices in vertices.items():
-                self.assertEquals(a.vertices(edge), vertices)
+                self.assertEquals(a.vertexes_to(edge), vertices)

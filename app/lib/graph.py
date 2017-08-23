@@ -26,23 +26,23 @@ class ABCGraph(metaclass=abc.ABCMeta):
         return a.union(b)
 
     @abc.abstractmethod
-    def insert(self, edge_from, edge_to):
+    def insert(self, v_from, v_to):
         pass
 
     @abc.abstractmethod
-    def has_edge(self, edge) -> bool:
+    def has_vertex(self, vertex) -> bool:
         pass
 
     @abc.abstractmethod
-    def has_vertice(self, edge_from, edge_to) -> bool:
+    def has_edge(self, v_from, v_to) -> bool:
         pass
 
     @abc.abstractmethod
-    def vertices(self, edge) -> set:
+    def vertexes_to(self, vertex) -> set:
         pass
 
     @abc.abstractmethod
-    def edges(self) -> set:
+    def vertexes(self) -> set:
         pass
 
     @abc.abstractmethod
@@ -66,62 +66,62 @@ class DiGraph(ABCGraph):
 
     _sentinel = frozenset()
 
-    def __init__(self, vertices=None):
-        self.vtx = vertices or {}
+    def __init__(self, edges=None):
+        self.edges = edges or {}
 
-        self._edges = set(self.vtx.keys())
+        self._vtxs = set(self.edges.keys())
 
-        if len(self.vtx):
-            for edges in self.vtx.values():
-                self._edges = self._edges | edges
+        if len(self.edges):
+            for _edges in self.edges.values():
+                self._vtxs = self._vtxs | _edges
 
-    def insert(self, edge_from, edge_to):
-        if edge_to is None:
-            self.vtx[edge_from] = self._sentinel
-            self._edges.add(edge_from)
+    def insert(self, e_from, e_to):
+        if e_to is None:
+            self.edges[e_from] = self._sentinel
+            self._vtxs.add(e_from)
         else:
-            self.vtx[edge_from] = set(self.vtx.get(edge_from, set()))
-            self.vtx[edge_from].add(edge_to)
+            self.edges[e_from] = set(self.edges.get(e_from, set()))
+            self.edges[e_from].add(e_to)
 
-            self._edges.add(edge_from)
-            self._edges.add(edge_to)
+            self._vtxs.add(e_from)
+            self._vtxs.add(e_to)
 
-    def has_edge(self, edge) -> bool:
-        return edge in self._edges
+    def has_vertex(self, vertex) -> bool:
+        return vertex in self._vtxs
 
-    def has_vertice(self, edge_from, edge_to) -> bool:
-        return edge_from in self.vtx and edge_to in self.vtx[edge_from]
+    def has_edge(self, v_from, v_to) -> bool:
+        return v_from in self.edges and v_to in self.edges[v_from]
 
-    def vertices(self, edge) -> set:
-        return self.vtx.get(edge, self._sentinel)
+    def vertexes_to(self, vertex) -> set:
+        return self.edges.get(vertex, self._sentinel)
 
-    def edges(self) -> set:
-        return self._edges
+    def vertexes(self) -> set:
+        return self._vtxs
 
     def union(self, other: 'ABCGraph') -> 'DiGraph':
-        for edge in other.edges():
-            self._edges.add(edge)
-            self._edges = self._edges | other.vertices(edge)
+        for edge in other.vertexes():
+            self._vtxs.add(edge)
+            self._vtxs = self._vtxs | other.vertexes_to(edge)
 
-            if edge in self.vtx:
-                self.vtx[edge] = self.vtx[edge] | (other.vertices(edge))
+            if edge in self.edges:
+                self.edges[edge] = self.edges[edge] | (other.vertexes_to(edge))
             else:
-                self.vtx[edge] = other.vertices(edge).copy()
+                self.edges[edge] = other.vertexes_to(edge).copy()
 
         return self
 
     def __len__(self):
-        return len(self.vtx)
+        return len(self.edges)
 
     def __copy__(self):
-        return DiGraph(self.vtx.copy())
+        return DiGraph(self.edges.copy())
 
     def reverse(self) -> 'DiGraph':
         tmp = DiGraph()
 
-        for edge_from in self.edges():
-            for edge_to in self.vertices(edge_from):
-                tmp.insert(edge_to, edge_from)
+        for v_from in self.vertexes():
+            for v_to in self.vertexes_to(v_from):
+                tmp.insert(v_to, v_from)
 
         return tmp
 
@@ -133,10 +133,10 @@ class AcyclicDiGraph(ABCGraph):
 
         if di_graph:
             if self._has_cycle(
-                self.vertices,
+                self.vertexes_to,
                 filter(
-                    lambda edge: len(self.vertices(edge)) > 0,
-                    self.di_graph.edges(),
+                    lambda edge: len(self.vertexes_to(edge)) > 0,
+                    self.di_graph.vertexes(),
                 ),
                 seen=set()
             ):
@@ -148,40 +148,40 @@ class AcyclicDiGraph(ABCGraph):
     def __copy__(self):
         return AcyclicDiGraph(copy.copy(self.di_graph))
 
-    def has_edge(self, edge) -> bool:
-        return self.di_graph.has_edge(edge)
+    def has_vertex(self, vertex) -> bool:
+        return self.di_graph.has_vertex(vertex)
 
-    def edges(self) -> set:
-        return self.di_graph.edges()
+    def vertexes(self) -> set:
+        return self.di_graph.vertexes()
 
-    def has_vertice(self, edge_from, edge_to) -> bool:
-        return self.di_graph.has_vertice(edge_from, edge_to)
+    def has_edge(self, v_from, v_to) -> bool:
+        return self.di_graph.has_edge(v_from, v_to)
 
-    def vertices(self, edge)-> set:
-        return self.di_graph.vertices(edge)
+    def vertexes_to(self, vertex)-> set:
+        return self.di_graph.vertexes_to(vertex)
 
-    def insert(self, edge_from, edge_to):
-        if self.has_vertice(edge_from, edge_to):
+    def insert(self, v_from, v_to):
+        if self.has_edge(v_from, v_to):
             return
 
-        edges_to = self.vertices(edge_from) | {edge_to}
+        edges_to = self.vertexes_to(v_from) | {v_to}
         if self._has_cycle(
-            lambda e: edges_to if e == edge_from else self.vertices(e),
-            {edge_from},
+            lambda e: edges_to if e == v_from else self.vertexes_to(e),
+            {v_from},
             seen=set()
         ):
             raise InconsistentState(
-                'Cycle for {} -> {}'.format(edge_from, edge_to),
+                'Cycle for {} -> {}'.format(v_from, v_to),
             )
 
-        self.di_graph.insert(edge_from, edge_to)
+        self.di_graph.insert(v_from, v_to)
 
     def union(self, other: ABCGraph) -> 'AcyclicDiGraph':
         if self._has_cycle(
-            lambda e: self.vertices(e) | other.vertices(e),
+            lambda e: self.vertexes_to(e) | other.vertexes_to(e),
             set(filter(
-                lambda other_edge: len(other.vertices(other_edge)) > 0,
-                other.edges(),
+                lambda other_edge: len(other.vertexes_to(other_edge)) > 0,
+                other.vertexes(),
             )),
             seen=set()
         ):
@@ -191,19 +191,19 @@ class AcyclicDiGraph(ABCGraph):
 
         return self
 
-    def _has_cycle(self, out_edges, from_edges, seen):
-        if not from_edges:
+    def _has_cycle(self, out_vs, from_vs, seen):
+        if not from_vs:
             return False
 
-        for from_edge in from_edges:
+        for from_edge in from_vs:
             seen.add(from_edge)
 
-            for out_edge in out_edges(from_edge):
+            for out_edge in out_vs(from_edge):
                 if out_edge in seen:
                     return True
 
                 seen.add(out_edge)
-                if self._has_cycle(out_edges, out_edges(out_edge), seen):
+                if self._has_cycle(out_vs, out_vs(out_edge), seen):
                     return True
                 seen.remove(out_edge)
             seen.remove(from_edge)

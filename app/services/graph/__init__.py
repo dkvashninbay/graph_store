@@ -33,7 +33,7 @@ class ServiceRunner:
         )
         self.app.router.add_get(
             '/nodes',
-            handler.get_edges,
+            handler.get_vertexes,
         )
         self.app.router.add_get(
             '/nodes/{node_id}/trees',
