@@ -7,8 +7,7 @@ postgres:
   minsize: 1
   maxsize: 5
 
-#db: postgres
-#db: redis
+#db: pg
 db: mem
 
 api:

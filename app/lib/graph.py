@@ -132,7 +132,7 @@ class AcyclicDiGraph(ABCGraph):
         self.di_graph = di_graph or DiGraph()
 
         if di_graph:
-            if self._has_cycle(
+            if self.has_cycle(
                 self.vertexes_to,
                 filter(
                     lambda edge: len(self.vertexes_to(edge)) > 0,
@@ -160,13 +160,13 @@ class AcyclicDiGraph(ABCGraph):
     def vertexes_to(self, vertex)-> set:
         return self.di_graph.vertexes_to(vertex)
 
-    def insert(self, v_from, v_to):
+    def insert(self, v_from, v_to, strict=True):
         if self.has_edge(v_from, v_to):
             return
 
-        edges_to = self.vertexes_to(v_from) | {v_to}
-        if self._has_cycle(
-            lambda e: edges_to if e == v_from else self.vertexes_to(e),
+        vtx_to = self.vertexes_to(v_from) | {v_to}
+        if strict and self.has_cycle(
+            lambda e: vtx_to if e == v_from else self.vertexes_to(e),
             {v_from},
             seen=set()
         ):
@@ -176,8 +176,8 @@ class AcyclicDiGraph(ABCGraph):
 
         self.di_graph.insert(v_from, v_to)
 
-    def union(self, other: ABCGraph) -> 'AcyclicDiGraph':
-        if self._has_cycle(
+    def union(self, other: ABCGraph, strict=True) -> 'AcyclicDiGraph':
+        if strict and self.has_cycle(
             lambda e: self.vertexes_to(e) | other.vertexes_to(e),
             set(filter(
                 lambda other_edge: len(other.vertexes_to(other_edge)) > 0,
@@ -191,7 +191,8 @@ class AcyclicDiGraph(ABCGraph):
 
         return self
 
-    def _has_cycle(self, out_vs, from_vs, seen):
+    @classmethod
+    def has_cycle(cls, out_vs, from_vs, seen):
         if not from_vs:
             return False
 
@@ -203,7 +204,27 @@ class AcyclicDiGraph(ABCGraph):
                     return True
 
                 seen.add(out_edge)
-                if self._has_cycle(out_vs, out_vs(out_edge), seen):
+                if cls.has_cycle(out_vs, out_vs(out_edge), seen):
+                    return True
+                seen.remove(out_edge)
+            seen.remove(from_edge)
+
+        return False
+
+    @classmethod
+    async def ahas_cycle(cls, out_vs, from_vs, seen):
+        if not from_vs:
+            return False
+
+        for from_edge in from_vs:
+            seen.add(from_edge)
+
+            for out_edge in await out_vs(from_edge):
+                if out_edge in seen:
+                    return True
+
+                seen.add(out_edge)
+                if await cls.ahas_cycle(out_vs, await out_vs(out_edge), seen):
                     return True
                 seen.remove(out_edge)
             seen.remove(from_edge)

@@ -18,7 +18,7 @@ if __name__ == '__main__':
         'config',
         'services',
         service_name,
-        'config.yaml',
+        'config.yml',
     )
 
     Core.config.update(yaml.load(open(config_path)))

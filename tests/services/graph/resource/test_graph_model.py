@@ -2,25 +2,35 @@ import asyncio
 import unittest
 
 from app.lib.graph import AcyclicDiGraph, DiGraph, InconsistentState
-from app.services.graph.resource.graph_model import InMemoryGraphModel
+from app.services.graph.resource.graph_model import (InMemoryGraphModel,
+                                                     PgEngine, PgGinGraphModel)
 
 
-class TestInMemoryGraphModel(unittest.TestCase):
+class BaseGraphModelMix:
+
+    cast = int
+
     def setUp(self):
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        self.graph_model = None
 
     def tearDown(self):
         self.loop.close()
 
     def test_insert_subtrees(self):
-        graph_model = InMemoryGraphModel(
-            AcyclicDiGraph(DiGraph())
-        )
+        graph_model = self.graph_model
 
         self.loop.run_until_complete(
             graph_model.insert(
                 [
                     {'parent': 0, 'node_id': 1},
+                ]
+            )
+        )
+
+        self.loop.run_until_complete(
+            graph_model.insert(
+                [
                     {'parent': 0, 'node_id': 2},
                     {'parent': 1, 'node_id': 3},
                     {'parent': 2, 'node_id': 3},
@@ -54,10 +64,57 @@ class TestInMemoryGraphModel(unittest.TestCase):
             (0, 2, 3, 4),
         }
 
-        subtrees = list(self.loop.run_until_complete(graph_model.trees(3)))
+        subtrees = list(
+            self.loop.run_until_complete(graph_model.trees(self.cast(3)))
+        )
         self.assertEqual(len(subtrees), len(expected_subtrees))
 
         for subtree in subtrees:
             self.assertTrue(
-                tuple(subtree) in expected_subtrees
+                tuple(map(int, subtree)) in expected_subtrees
             )
+
+
+class TestInMemoryGraphModel(BaseGraphModelMix, unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.graph_model = InMemoryGraphModel(
+            AcyclicDiGraph(DiGraph())
+        )
+
+    def tearDown(self):
+        super().tearDown()
+
+
+class TestPgGinGraphModel(BaseGraphModelMix, unittest.TestCase):
+    cast = str
+
+    def setUp(self):
+        super().setUp()
+
+        config = {
+            'postgres': {
+                'database': 'graph_service',
+                'user': 'graph_service',
+                'password': 'graph_service',
+                'host': 'localhost',
+                'port': 5432,
+                'minsize': 1,
+                'maxsize': 5,
+            },
+        }
+
+        self.engine = PgEngine(
+            config,
+            self.loop,
+        )
+        self.loop.run_until_complete(self.engine.init_engine())
+        self.graph_model = PgGinGraphModel(self.engine)
+        self.loop.run_until_complete(self.graph_model.init())
+
+    def tearDown(self):
+        self.loop.run_until_complete(self.engine.close())
+
+        super().tearDown()
