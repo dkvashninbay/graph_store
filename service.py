@@ -1,11 +1,10 @@
+import logging
 import os
 import sys
 
-import logging
 import yaml
 
 from app.containers import Core, Services
-
 
 if __name__ == '__main__':
     _, service_name, *args = sys.argv

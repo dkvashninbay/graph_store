@@ -15,7 +15,7 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">1000</stringProp>
+          <stringProp name="LoopController.loops">50000</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">10</stringProp>
@@ -35,8 +35,8 @@
                 <stringProp name="Argument.value">{&#xd;
     &quot;nodes&quot;: [&#xd;
         {&#xd;
-            &quot;id&quot;: &quot;${__Random(0,1000)}&quot;,&#xd;
-            &quot;parent&quot;: &quot;${__Random(0,1000)}&quot;&#xd;
+            &quot;id&quot;: &quot;${__Random(0,100000)}&quot;,&#xd;
+            &quot;parent&quot;: &quot;${__Random(0,100000)}&quot;&#xd;
         }&#xd;
     ]&#xd;
 }</stringProp>
@@ -184,7 +184,7 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">1000</stringProp>
+          <stringProp name="LoopController.loops">10000</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">10</stringProp>
@@ -210,7 +210,7 @@
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
-          <stringProp name="HTTPSampler.path">/nodes/${__Random(0,1000)}/trees</stringProp>
+          <stringProp name="HTTPSampler.path">/nodes/${__Random(0,100000)}/trees</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>

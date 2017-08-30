@@ -2,8 +2,7 @@ import asyncio
 import unittest
 
 from app.lib.graph import AcyclicDiGraph, DiGraph, InconsistentState
-from app.services.graph.resource.graph_model import (InMemoryGraphModel,
-                                                     PgEngine, PgGinGraphModel)
+from app.services.graph.resource import mem, pg
 
 
 class BaseGraphModelMix:
@@ -80,7 +79,7 @@ class TestInMemoryGraphModel(BaseGraphModelMix, unittest.TestCase):
     def setUp(self):
         super().setUp()
 
-        self.graph_model = InMemoryGraphModel(
+        self.graph_model = mem.InMemoryGraphModel(
             AcyclicDiGraph(DiGraph())
         )
 
@@ -106,12 +105,12 @@ class TestPgGinGraphModel(BaseGraphModelMix, unittest.TestCase):
             },
         }
 
-        self.engine = PgEngine(
+        self.engine = pg.PgEngine(
             config,
             self.loop,
         )
         self.loop.run_until_complete(self.engine.init_engine())
-        self.graph_model = PgGinGraphModel(self.engine)
+        self.graph_model = pg.PgGinGraphModel(self.engine)
         self.loop.run_until_complete(self.graph_model.init())
 
     def tearDown(self):

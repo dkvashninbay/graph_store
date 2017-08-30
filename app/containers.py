@@ -5,8 +5,7 @@ import dependency_injector.containers as containers
 import dependency_injector.providers as providers
 
 from .services import graph as graph_service
-from .services.graph.resource.graph_model import (InMemoryGraphModel, PgEngine,
-                                                  PgGinGraphModel)
+from .services.graph.resource import mem, pg
 
 
 class Core(containers.DeclarativeContainer):
@@ -22,7 +21,7 @@ class Core(containers.DeclarativeContainer):
 class Resources(containers.DeclarativeContainer):
 
     pg = providers.Singleton(
-        PgEngine,
+        pg.PgEngine,
         config=Core.config,
         loop=Core.loop,
     )
@@ -31,11 +30,11 @@ class Resources(containers.DeclarativeContainer):
 class Models(containers.DeclarativeContainer):
 
     mem_graph = providers.Factory(
-        InMemoryGraphModel
+        mem.InMemoryGraphModel
     )
 
     pg_graph = providers.Factory(
-        PgGinGraphModel,
+        pg.PgGinGraphModel,
         pg_engine=Resources.pg,
     )
 

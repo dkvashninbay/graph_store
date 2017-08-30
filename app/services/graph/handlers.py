@@ -3,7 +3,7 @@ from logging import Logger
 from aiohttp import web
 
 from ...lib.graph import InconsistentState
-from .resource.graph_model import ABCGraphModel
+from .resource import ABCGraphModel
 from .trafarets import NodesTrafaret
 
 
