@@ -2,7 +2,7 @@
 Project for fun.
 
 ### Configuration:
-[config/services/graph/config.yaml](config/services/graph/config.yaml)
+[config/services/graph/config.yml](config/services/graph/config.yml)
 
 ### API endpoints:
 - POST /nodes
